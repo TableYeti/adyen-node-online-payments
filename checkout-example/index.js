@@ -6,7 +6,8 @@ const morgan = require("morgan");
 const { uuid } = require("uuidv4");
 
 const { hmacValidator } = require('@adyen/api-library');
-const { Client, Config, CheckoutAPI } = require("@adyen/api-library");
+const YetipayPaymentsApi = require('../YetipayPaymentsApi');
+
 
 // init app
 const app = express();
@@ -25,12 +26,18 @@ dotenv.config({
   path: "./.env",
 });
 
-// Adyen NodeJS library configuration
-const config = new Config();
-config.apiKey = process.env.ADYEN_API_KEY;
-const client = new Client({ config });
-client.setEnvironment("TEST");  // change to LIVE for production
-const checkout = new CheckoutAPI(client);
+// Initialize the yetipay API client
+const yetipay = new YetipayPaymentsApi(
+  process.env.YETIPAY_API_BASE_URL,
+  process.env.YETIPAY_API_KEY
+);
+
+// // Adyen NodeJS library configuration
+// const config = new Config();
+// config.apiKey = process.env.ADYEN_API_KEY;
+// const client = new Client({ config });
+// client.setEnvironment("TEST");  // change to LIVE for production
+// const checkout = new CheckoutAPI(client);
 
 app.engine(
   "handlebars",
@@ -56,10 +63,8 @@ app.post("/api/sessions", async (req, res) => {
     // const isHttps = req.connection.encrypted;
     const protocol = req.socket.encrypted? 'https' : 'http';
     // Ideally the data passed here should be computed based on business logic
-    const response = await checkout.PaymentsApi.sessions({
+    const response = await yetipay.sessions({
       amount: { currency: "EUR", value: 10000 }, // value is 100€ in minor units
-      countryCode: "NL",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       reference: orderRef, // required: your Payment Reference
       returnUrl: `${protocol}://${localhost}/handleShopperRedirect?orderRef=${orderRef}`, // set redirect URL required for some payment methods (ie iDEAL)
       // set lineItems required for some payment methods (ie Klarna)
