@@ -6,7 +6,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { v4 as uuid } from "uuid";
-import { Client, CheckoutAPI } from "@adyen/api-library";
 import {
   PaymentMethodsResponse,
   PaymentResponse,
@@ -18,27 +17,22 @@ import {
   CreateCheckoutSessionResponse,
   CreateCheckoutSessionRequest,
 } from "@adyen/api-library/lib/src/typings/checkout/models";
-import { PaymentsApi } from "@adyen/api-library/lib/src/services/checkout/paymentsApi";
+import * as YetipayPaymentsApi from '../../../../YetipayPaymentsApi';
+
+// Custom types that make merchantAccount optional for our custom backend
+type OptionalMerchantAccount<T extends { merchantAccount?: string }> = Omit<T, 'merchantAccount'> & { merchantAccount?: string };
+type PaymentRequestData = OptionalMerchantAccount<PaymentRequest>;
+type SessionsRequestData = OptionalMerchantAccount<CreateCheckoutSessionRequest>;
 
 @Injectable()
 export class PaymentsService {
   API_KEY: string;
   MERCHANT_ACCOUNT: string;
 
-  paymentsAPI: PaymentsApi;
+  paymentsAPI: YetipayPaymentsApi;
 
   constructor(private configService: ConfigService) {
-    this.API_KEY = this.configService.get<string>("ADYEN_API_KEY");
-    this.MERCHANT_ACCOUNT = this.configService.get<string>("ADYEN_MERCHANT_ACCOUNT");
-
-    // initialise the client object
-    const client: Client = new Client({
-      apiKey: this.API_KEY,
-      environment: "TEST",
-    });
-
-    // intialise the API object with the client object
-    this.paymentsAPI = new CheckoutAPI(client).PaymentsApi; //CheckoutAPI exports a number of helpers for different API's, since we want to use Payments API we want a reference to PaymentsAPI
+    this.paymentsAPI = new YetipayPaymentsApi(this.configService.get<string>("YETIPAY_API_BASE_URL"), this.configService.get<string>("YETIPAY_API_KEY"));
   }
 
   /**
@@ -48,7 +42,6 @@ export class PaymentsService {
    */
   async postForPaymentMethods(): Promise<PaymentMethodsResponse> {
     const postData = {
-      merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
     const paymentMethodsResponse: PaymentMethodsResponse = await this.paymentsAPI.paymentMethods({
@@ -103,7 +96,7 @@ export class PaymentsService {
       },
     };
 
-    const paymentRequestData: PaymentRequest = {
+    const paymentRequestData: PaymentRequestData = {
       amount: {
         currency: "EUR",
         value: 1000,
@@ -139,7 +132,6 @@ export class PaymentsService {
       reference: reference,
       paymentMethod: data.paymentMethod, // this is the paymentMethod object from the state.data object returned from the submit on the dropin component from the client
       returnUrl: url,
-      merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
     const paymentResponse: PaymentResponse = await this.paymentsAPI.payments(paymentRequestData);
@@ -183,7 +175,7 @@ export class PaymentsService {
   async postForPaymentsRedirect({ data, url }): Promise<PaymentResponse> {
     const reference = uuid(); // generate a unique reference id
 
-    const paymentRequestData: PaymentRequest = {
+    const paymentRequestData: PaymentRequestData = {
       amount: {
         currency: "EUR",
         value: 1000,
@@ -216,7 +208,6 @@ export class PaymentsService {
       reference: reference,
       paymentMethod: data.paymentMethod, // this is the paymentMethod object from the state.data object returned from the submit event on the dropin or component from the client
       returnUrl: url, // the url you want the shopper to be returned to after redirect (this url is where the redirectData will be appended to on redirect back)
-      merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
     const paymentResponse: PaymentResponse = await this.paymentsAPI.payments(paymentRequestData);
@@ -277,7 +268,7 @@ export class PaymentsService {
   async postForSessions({ url }): Promise<CreateCheckoutSessionResponse> {
     const reference = uuid(); // generate a unique reference id
 
-    const sessionsRequestData: CreateCheckoutSessionRequest = {
+    const sessionsRequestData: SessionsRequestData = {
       amount: {
         currency: "EUR",
         value: 1000,
@@ -307,7 +298,6 @@ export class PaymentsService {
       channel: PaymentRequest.ChannelEnum.Web,
       reference: reference,
       returnUrl: url,
-      merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
     const sessionsResponse = await this.paymentsAPI.sessions(sessionsRequestData);
