@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const { uuid } = require("uuidv4");
 
 const { hmacValidator } = require('@adyen/api-library');
-const { Client, Config, CheckoutAPI } = require("@adyen/api-library");
+const YetipayPaymentsApi = require('../YetipayPaymentsApi');
 
 const { PaymentModel, PaymentDetailsModel, getAll, getByMerchantReference, addToHistory, updatePayment, put} = require('./storage.js')
 
@@ -28,12 +28,11 @@ dotenv.config({
   path: "./.env",
 });
 
-// Adyen Node.js API library boilerplate (configuration, etc.)
-const config = new Config();
-config.apiKey = process.env.ADYEN_API_KEY;
-const client = new Client({ config });
-client.setEnvironment("TEST");  // change to LIVE for production
-const checkout = new CheckoutAPI(client);
+// Initialize the yetipay API client
+const yetipay = new YetipayPaymentsApi(
+  process.env.YETIPAY_API_BASE_URL,
+  process.env.YETIPAY_API_KEY
+);
 
 app.engine(
   "handlebars",
@@ -51,9 +50,8 @@ app.set("view engine", "handlebars");
 // Get payment methods
 app.post("/api/paymentMethods", async (req, res) => {
   try {
-    const response = await checkout.PaymentsApi.paymentMethods({
+    const response = await yetipay.paymentMethods({
       channel: "Web",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
     });
     res.json(response);
   } catch (err) {
@@ -73,7 +71,7 @@ app.post("/api/payments/details", async (req, res) => {
   try {
     // Return the response back to client
     // (for further action handling or presenting result to shopper)
-    const response = await checkout.PaymentsApi.paymentsDetails(payload);
+    const response = await yetipay.paymentsDetails(payload);
 
     res.json(response);
   } catch (err) {
@@ -94,7 +92,7 @@ app.all("/api/handleShopperRedirect", async (req, res) => {
   }
 
   try {
-    const response = await checkout.PaymentsApi.paymentsDetails({ details });
+    const response = await yetipay.paymentsDetails({ details });
     // Conditionally handle different result codes for the shopper
     switch (response.resultCode) {
       case "Authorised":
@@ -130,10 +128,9 @@ app.post("/api/pre-authorisation", async (req, res) => {
     const localhost = req.get('host');
     const protocol = req.socket.encrypted? 'https' : 'http';    
     // Ideally the data passed here should be computed based on business logic
-    const response = await checkout.PaymentsApi.payments({
+    const response = await yetipay.payments({
       amount: { currency: "EUR", value: 24999 }, // value is 249.99€ in minor units
       reference: orderRef, // required
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       channel: "Web", 
       paymentMethod: req.body.paymentMethod,
       additionalData: {
@@ -259,10 +256,9 @@ app.post("/admin/update-payment-amount", async (req, res) => {
       throw Error("Payment not found in storage - Reference: " + req.body.reference);
     }
 
-    const response = await checkout.ModificationsApi.updateAuthorisedAmount(
+    const response = await yetipay.updateAuthorisedAmount(
       paymentModel.pspReference, 
       {
-        merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, 
         amount: { currency: "EUR", value: req.body.amount }, 
         reference: req.body.reference,
         industryUsage: "delayedCharge"
@@ -289,10 +285,9 @@ app.post("/admin/capture-payment", async (req, res) => {
       throw Error("Payment not found in storage - Reference: " + req.body.reference);
     }
 
-    const response = await checkout.ModificationsApi.captureAuthorisedPayment(
+    const response = await yetipay.captureAuthorisedPayment(
       paymentModel.pspReference, 
       {
-        merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, 
         amount: { currency: paymentModel.currency, value: paymentModel.amount }, 
         reference: paymentModel.merchantReference
       }
@@ -318,10 +313,9 @@ app.post("/admin/reversal-payment", async (req, res) => {
       throw Error("Payment not found in storage - Reference: " + req.body.reference);
     }
 
-    const response = await checkout.ModificationsApi.refundOrCancelPayment(
+    const response = await yetipay.refundOrCancelPayment(
       paymentModel.pspReference, 
       {
-        merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, 
         reference: paymentModel.merchantReference
       }
     )
