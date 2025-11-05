@@ -96,6 +96,78 @@ class YetipayPaymentsApi {
 
         return await response.json();
     }
+
+    /**
+     * Update the authorised amount of a payment
+     * @param {string} pspReference - Payment PSP reference
+     * @param {Object} updateData - Update data including amount, reference, etc.
+     * @returns {Promise<Object>} Update response
+     */
+    async updateAuthorisedAmount(pspReference, updateData) {
+        const response = await fetch(`${this.apiBaseUrl}/payments/updateAuthorisedAmount`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({
+                pspReference,
+                ...updateData
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Capture an authorised payment
+     * @param {string} pspReference - Payment PSP reference
+     * @param {Object} captureData - Capture data including amount, reference, etc.
+     * @returns {Promise<Object>} Capture response
+     */
+    async captureAuthorisedPayment(pspReference, captureData) {
+        const response = await fetch(`${this.apiBaseUrl}/payments/capture`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({
+                pspReference,
+                ...captureData
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Refund or cancel a payment
+     * @param {string} pspReference - Payment PSP reference
+     * @param {Object} refundData - Refund data including amount, reference, etc.
+     * @returns {Promise<Object>} Refund/cancel response
+     */
+    async refundOrCancelPayment(pspReference, refundData) {
+        const response = await fetch(`${this.apiBaseUrl}/payments/refundOrCancel`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({
+                pspReference,
+                ...refundData
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        return await response.json();
+    }
 }
 
 module.exports = YetipayPaymentsApi;
