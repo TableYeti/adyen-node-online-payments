@@ -1,4 +1,9 @@
-# Adyen [3D Secure 2 Authentication](https://docs.adyen.com/online-payments/3d-secure/) Integration Example
+## [3D Secure 2 Authentication](https://docs.adyen.com/online-payments/3d-secure/) Integration Example
+
+> **Note:**  
+> This repository is a fork of the official [Adyen Node Online Payments](https://github.com/adyen-examples/adyen-node-online-payments/) examples repository, adapted for use with [yetipay](https://yetipay.me), an Adyen for Platforms partner.
+>
+> The fork is kept up to date with upstream. To see the minimal set of changes required for adaptation, [compare the branches](https://github.com/TableYeti/adyen-node-online-payments/compare/main...TableYeti:adyen-node-online-payments:feat/adapt-for-yetipay) on GitHub.
 
 ## Description
 
@@ -11,16 +16,15 @@ For additional information, refer to our [documentation on testing 3DS2](https:/
 
 ## Prerequisites
 
+- [yetipay API credentials](https://docs.api.yetipay.me/TODO)
 - Node.js 20+
-
-This demo leverages Adyen's API Library for Node.js ([GitHub](https://github.com/Adyen/adyen-node-api-library) | [Docs](https://docs.adyen.com/development-resources/libraries#javascript)).
 
 ## 1. Installation
 
 1. Clone this repo:
 
 ```
-git clone https://github.com/adyen-examples/adyen-node-online-payments.git
+git clone https://github.com/yetipay/adyen-node-online-payments.git
 ```
 
 2. Build the frontend and backend. Navigate to the /3ds2-example and install dependencies:
@@ -38,25 +42,25 @@ cd 3ds2-example/backend && npm install
 
 1. Create a `./.env` file in the `/frontend`-folder with all required configuration & run `npm install`.
 
-- [Client Key](https://docs.adyen.com/user-management/client-side-authentication)
+- [Adyen Client Key](https://docs.api.yetipay.me/TODO)
 
 ```
-ADYEN_CLIENT_KEY=YOUR_ADYEN_CLIENT_KEY
+ADYEN_CLIENT_KEY=yourAdyenClientKey
 ```
 
 2. Create a `./.env` file in the `/backend`-folder with all required configuration & run `npm install`.
 
-- [API key](https://docs.adyen.com/user-management/how-to-get-the-api-key)
-- [Merchant Account](https://docs.adyen.com/account/account-structure)
+- [yetipay Base URL](https://docs.api.yetipay.me/TODO)
+- [yetipay API key](https://docs.api.yetipay.me/TODO)
 
 ```
-ADYEN_API_KEY=YOUR_ADYEN_API_KEY
-ADYEN_MERCHANT_ACCOUNT=YOUR_ADYEN_MERCHANT_ACCOUNT
+YETIPAY_API_BASE_URL=https://api.yetipay.me
+YETIPAY_API_KEY=yourYetipayApiKey
 ```
 
 > Note: You can use `.env.example` as reference.
 
-3. In your Customer Area, remember to include `http://localhost:8080` in the list of Allowed Origins to allow the Adyen.Drop-in/Components to load. Otherwise an 'Invalid Origin'-error will occur.
+3. Ensure your client key [is configured with](https://docs.api.yetipay.me/TODO) the domain of your web application. This example uses http://localhost:8080/
 
 ## 3. Run the fullstack application
 
@@ -72,10 +76,10 @@ This command will use the [concurrently](https://www.npmjs.com/package/concurren
 The backend server should start up at `http://localhost:3000` and the frontend server at `http://localhost:8080`.
 
 ## 4. Usage
+
 1. Visit `http://localhost:8080`
 2. Select your integration-type and flow
 3. Select `Card` and enter a [Test Card Number](https://docs.adyen.com/development-resources/testing/test-card-numbers/#test-3d-secure-2-authentication) that triggers the 3DS2 flow.
-
 
 ## Testing webhooks
 
