@@ -3,22 +3,21 @@
  * Handles all Adyen API interactions with proper error handling
  */
 
-const { Client, Config, CheckoutAPI } = require("@adyen/api-library");
 const { hmacValidator } = require('@adyen/api-library');
 const { config, getCurrencyForCountry, getLineItemsForPaymentMethod } = require('../config');
 const { ConfigurationError, retryRequest, handleAdyenError } = require('../utils/errorHandler');
 
-// Adyen NodeJS library configuration
-const adyenConfig = new Config();
-adyenConfig.apiKey = config.adyen.ADYEN_API_KEY;
+const YetipayPaymentsApi = require('../../../YetipayPaymentsApi');
 
-if (!adyenConfig.apiKey) {
-  throw new ConfigurationError('ADYEN_API_KEY is required', ['ADYEN_API_KEY']);
+if (!process.env.YETIPAY_API_KEY) {
+  throw new ConfigurationError('YETIPAY_API_KEY is required', ['YETIPAY_API_KEY']);
 }
 
-const client = new Client({ config: adyenConfig });
-client.setEnvironment(config.adyen.ADYEN_ENVIRONMENT);
-const checkout = new CheckoutAPI(client);
+// Initialize the yetipay API client
+const yetipay = new YetipayPaymentsApi(
+  process.env.YETIPAY_API_BASE_URL,
+  process.env.YETIPAY_API_KEY
+);
 
 /**
  * Get payment methods
@@ -26,9 +25,8 @@ const checkout = new CheckoutAPI(client);
 const getPaymentMethods = async (countryCode, amount, shopperLocale) => {
   try {
     const response = await retryRequest(async () => {
-      return await checkout.PaymentMethodsApi.paymentMethods({
+      return await yetipay.paymentMethods({
         channel: "Web",
-        merchantAccount: config.adyen.ADYEN_MERCHANT_ACCOUNT,
         countryCode,
         amount,
         shopperLocale,
@@ -74,7 +72,6 @@ const createSession = async (sessionData) => {
     const sessionRequest = {
       amount: { currency: currency, value: config.payment.defaultAmount },
       countryCode: countryCode,
-      merchantAccount: config.adyen.ADYEN_MERCHANT_ACCOUNT,
       reference: orderRef,
       returnUrl: `${baseUrl}/handleShopperRedirect?orderRef=${orderRef}`,
       lineItems: lineItems
@@ -88,7 +85,7 @@ const createSession = async (sessionData) => {
     });
 
     const response = await retryRequest(async () => {
-      return await checkout.PaymentsApi.sessions(sessionRequest);
+      return await yetipay.sessions(sessionRequest);
     });
 
     console.log('Session created successfully:', {
@@ -120,7 +117,7 @@ const submitPaymentDetails = async (details) => {
     });
 
     const response = await retryRequest(async () => {
-      return await checkout.PaymentsApi.paymentsDetails({ details });
+      return await yetipay.paymentsDetails({ details });
     });
 
     console.log('Payment details submitted successfully:', {
@@ -146,6 +143,5 @@ module.exports = {
   getPaymentMethods,
   createSession,
   submitPaymentDetails,
-  hmacValidator: new hmacValidator(),
-  adyenConfig: config.adyen // Export Adyen specific config
+  hmacValidator: new hmacValidator()
 };

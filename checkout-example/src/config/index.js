@@ -88,9 +88,9 @@ const config = {
  */
 const validateConfig = () => {
   const requiredVars = [
-    'ADYEN_API_KEY',
-    'ADYEN_MERCHANT_ACCOUNT',
-    'ADYEN_CLIENT_KEY'
+    'YETIPAY_API_KEY',
+    'YETIPAY_API_BASE_URL',
+    'ADYEN_CLIENT_KEY',
   ];
 
   const missing = requiredVars.filter(varName => !process.env[varName]);

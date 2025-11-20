@@ -36,25 +36,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "/public")));
 
 
-// enables environment variables by
-// parsing the .env file and assigning it to process.env
-dotenv.config({
-  path: "./.env",
-});
-
-// Initialize the yetipay API client
-const yetipay = new YetipayPaymentsApi(
-  process.env.YETIPAY_API_BASE_URL,
-  process.env.YETIPAY_API_KEY
-);
-
-// // Adyen NodeJS library configuration
-// const config = new Config();
-// config.apiKey = process.env.ADYEN_API_KEY;
-// const client = new Client({ config });
-// client.setEnvironment("TEST");  // change to LIVE for production
-// const checkout = new CheckoutAPI(client);
-
 // Handlebars setup
 app.engine(
   "handlebars",
