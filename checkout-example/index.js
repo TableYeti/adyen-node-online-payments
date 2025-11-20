@@ -35,6 +35,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "/public")));
 
+
 // Handlebars setup
 app.engine(
   "handlebars",
@@ -57,6 +58,9 @@ app.get("/api/debug/payment-statuses", paymentsController.getAllPaymentStatuses)
 
 // Webhook endpoints
 app.post("/api/webhooks/notifications", webhooksController.processWebhook);
+
+/* ################# end API ENDPOINTS ###################### */
+
 
 /* ################# CLIENT SIDE ENDPOINTS ###################### */
 
