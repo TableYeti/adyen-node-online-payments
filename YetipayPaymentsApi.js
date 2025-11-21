@@ -43,7 +43,7 @@ class YetipayPaymentsApi {
      * @returns {Promise<Object>} Payment methods response
      */
     async paymentMethods(paymentMethodsData) {
-        const response = await fetch(`${this.apiBaseUrl}/paymentMethods`, {
+        const response = await fetch(`${this.apiBaseUrl}/payment-methods`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify(paymentMethodsData)
@@ -104,7 +104,7 @@ class YetipayPaymentsApi {
      * @returns {Promise<Object>} Update response
      */
     async updateAuthorisedAmount(pspReference, updateData) {
-        const response = await fetch(`${this.apiBaseUrl}/payments/updateAuthorisedAmount`, {
+        const response = await fetch(`${this.apiBaseUrl}/payments/amount-updates`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({
@@ -152,7 +152,7 @@ class YetipayPaymentsApi {
      * @returns {Promise<Object>} Refund/cancel response
      */
     async refundOrCancelPayment(pspReference, refundData) {
-        const response = await fetch(`${this.apiBaseUrl}/payments/refundOrCancel`, {
+        const response = await fetch(`${this.apiBaseUrl}/payments/reversals`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({
